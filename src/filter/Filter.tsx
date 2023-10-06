@@ -97,7 +97,9 @@ export default function Filter() {
             <For each={records()}>
               {(record) => (
                 <tr>
-                  <td>{record.name}</td>
+                  <td>
+                    <Highlighter text={record.name} target={input()} />
+                  </td>
                   <td>{record.phone}</td>
                   <td>{record.address}</td>
                 </tr>
@@ -106,6 +108,18 @@ export default function Filter() {
           </tbody>
         </table>
       </Show>
+    </>
+  );
+}
+
+function Highlighter(props: { text: string; target: string }) {
+  const startIndex = props.text.toLowerCase().indexOf(props.target.toLowerCase());
+  const endIndex = startIndex + props.target.length;
+  return (
+    <>
+      {props.text.slice(0, startIndex)}
+      <mark>{props.text.slice(startIndex, endIndex)}</mark>
+      {props.text.slice(endIndex)}
     </>
   );
 }
