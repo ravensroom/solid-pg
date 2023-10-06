@@ -1,9 +1,9 @@
-import Bookshelf from './demo/BookShelf';
+import Filter from './filter/Filter';
 
 function App() {
   return (
     <>
-      <Bookshelf name="solid" />
+      <Filter />
     </>
   );
 }
