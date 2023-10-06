@@ -17,6 +17,31 @@ export default function Filter() {
   const [cache, setCache] = createSignal<Cache>(new Map());
   const [showLoading, setShowLoading] = createSignal(false);
 
+  const debounce = (func: () => void, delay: number = 600) => {
+    let timer: ReturnType<typeof setTimeout>;
+    return () => {
+      clearTimeout(timer);
+      timer = setTimeout(func, delay);
+    };
+  };
+
+  const handleInput = function (
+    e: InputEvent & {
+      currentTarget: HTMLInputElement;
+      target: HTMLInputElement;
+    }
+  ) {
+    setInput(() => {
+      const value = e.currentTarget.value;
+      debounce(() => {
+        console.log('debounce');
+        if (cache().has(value)) setRecords(cache().get(value)!);
+        else setSearchTerm(value);
+      })();
+      return value;
+    });
+  };
+
   createEffect(() => {
     if (searchResult() && searchResult.state === 'ready') {
       setCache((prevCache) => {
@@ -52,20 +77,13 @@ export default function Filter() {
   });
 
   createEffect(() => {
+    console.log(input());
     console.log(cache());
   });
 
   return (
     <>
-      <input value={input()} onInput={(e) => setInput(e.currentTarget.value)} />
-      <button
-        onClick={() => {
-          if (cache().has(input())) setRecords(cache().get(input())!);
-          else setSearchTerm(input());
-        }}
-      >
-        search
-      </button>
+      <input value={input()} onInput={handleInput} />
       <Show when={!showLoading()} fallback={<>Loading...</>}>
         <table>
           <thead>
