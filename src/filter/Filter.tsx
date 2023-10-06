@@ -1,4 +1,4 @@
-import { For, createEffect, createResource, createSignal } from 'solid-js';
+import { For, Show, createEffect, createResource, createSignal } from 'solid-js';
 import { getData } from './api/getData';
 
 type Record = {
@@ -15,6 +15,7 @@ export default function Filter() {
   const [searchResult] = createResource<Record[], string>(searchTerm, getData);
   const [records, setRecords] = createSignal<Record[]>([]);
   const [cache, setCache] = createSignal<Cache>(new Map());
+  const [showLoading, setShowLoading] = createSignal(false);
 
   createEffect(() => {
     if (searchResult() && searchResult.state === 'ready') {
@@ -41,6 +42,16 @@ export default function Filter() {
   });
 
   createEffect(() => {
+    if (searchResult.loading) {
+      setTimeout(() => {
+        if (searchResult.loading) setShowLoading(true);
+      }, 500);
+    } else {
+      setShowLoading(false);
+    }
+  });
+
+  createEffect(() => {
     console.log(cache());
   });
 
@@ -55,26 +66,28 @@ export default function Filter() {
       >
         search
       </button>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Phone</th>
-            <th>Address</th>
-          </tr>
-        </thead>
-        <tbody>
-          <For each={records()}>
-            {(record) => (
-              <tr>
-                <td>{record.name}</td>
-                <td>{record.phone}</td>
-                <td>{record.address}</td>
-              </tr>
-            )}
-          </For>
-        </tbody>
-      </table>
+      <Show when={!showLoading()} fallback={<>Loading...</>}>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Phone</th>
+              <th>Address</th>
+            </tr>
+          </thead>
+          <tbody>
+            <For each={records()}>
+              {(record) => (
+                <tr>
+                  <td>{record.name}</td>
+                  <td>{record.phone}</td>
+                  <td>{record.address}</td>
+                </tr>
+              )}
+            </For>
+          </tbody>
+        </table>
+      </Show>
     </>
   );
 }
