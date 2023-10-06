@@ -1,15 +1,11 @@
-import { createSignal } from 'solid-js'
+import Bookshelf from './demo/BookShelf';
 
 function App() {
-  const [count, setCount] = createSignal(0)
-
   return (
     <>
-      <button onClick={() => setCount((count) => count + 1)}>
-        count is {count()}
-      </button>
+      <Bookshelf name="solid" />
     </>
-  )
+  );
 }
 
-export default App
+export default App;
