@@ -17,13 +17,36 @@ export default function Filter() {
   const [cache, setCache] = createSignal<Cache>(new Map());
   const [showLoading, setShowLoading] = createSignal(false);
 
-  const debounce = (func: () => void, delay: number = 1000) => {
+  const debounce = (func, delay: number = 800) => {
     let timer: ReturnType<typeof setTimeout>;
-    return () => {
+    return (...args) => {
       clearTimeout(timer);
-      timer = setTimeout(func, delay);
+      timer = setTimeout(() => func.apply(this, args), delay);
     };
   };
+
+  const handleSearch = function (value: string) {
+    const terms = value.split(' ');
+    if (terms.length === 1) {
+      setSearchTerm(value);
+      return;
+    }
+    // multi-word search
+    const results: Record[][] = [];
+    terms.forEach(async (term) => {
+      if (cache().has(term)) {
+        results.push(cache().get(term)!);
+        return;
+      }
+      console.log('term', term);
+      const data = await getData(term);
+      console.log('data', data);
+      results.push(data);
+      console.log('results', results);
+    });
+  };
+
+  const handleSearchDebounced = debounce(handleSearch);
 
   const handleInput = function (
     e: InputEvent & {
@@ -31,34 +54,13 @@ export default function Filter() {
       target: HTMLInputElement;
     }
   ) {
-    setInput(() => {
-      const value = e.currentTarget.value;
-      debounce(() => {
-        console.log('debounce');
-        if (cache().has(value)) setRecords(cache().get(value)!);
-        else {
-          const terms = value.split(' ');
-          if (terms.length === 1) {
-            setSearchTerm(value);
-            return;
-          }
-          // multi-word search
-          const results: Record[][] = [];
-          terms.forEach(async (term) => {
-            if (cache().has(term)) {
-              results.push(cache().get(term)!);
-              return;
-            }
-            console.log('term', term);
-            const data = await getData(term);
-            console.log('data', data);
-            results.push(data);
-            console.log('results', results);
-          });
-        }
-      })();
+    const value = e.currentTarget.value;
+    setInput(value);
+    if (cache().has(value)) {
+      setRecords(cache().get(value)!);
       return value;
-    });
+    }
+    handleSearchDebounced(value);
   };
 
   createEffect(() => {
