@@ -17,7 +17,7 @@ export default function Filter() {
   const [cache, setCache] = createSignal<Cache>(new Map());
   const [showLoading, setShowLoading] = createSignal(false);
 
-  const debounce = (func: () => void, delay: number = 600) => {
+  const debounce = (func: () => void, delay: number = 1000) => {
     let timer: ReturnType<typeof setTimeout>;
     return () => {
       clearTimeout(timer);
@@ -36,7 +36,26 @@ export default function Filter() {
       debounce(() => {
         console.log('debounce');
         if (cache().has(value)) setRecords(cache().get(value)!);
-        else setSearchTerm(value);
+        else {
+          const terms = value.split(' ');
+          if (terms.length === 1) {
+            setSearchTerm(value);
+            return;
+          }
+          // multi-word search
+          const results: Record[][] = [];
+          terms.forEach(async (term) => {
+            if (cache().has(term)) {
+              results.push(cache().get(term)!);
+              return;
+            }
+            console.log('term', term);
+            const data = await getData(term);
+            console.log('data', data);
+            results.push(data);
+            console.log('results', results);
+          });
+        }
       })();
       return value;
     });
@@ -74,11 +93,6 @@ export default function Filter() {
     } else {
       setShowLoading(false);
     }
-  });
-
-  createEffect(() => {
-    console.log(input());
-    console.log(cache());
   });
 
   return (
